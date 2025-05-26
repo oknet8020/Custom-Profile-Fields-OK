@@ -5,21 +5,22 @@ const Meta = require.main.require('./src/meta');
 const db = require.main.require('./src/database');
 const winston = require.main.require('winston');
 const nconf = require.main.require('nconf');
-const path = require('path');
-const fs = require('fs');
+const path = require.main.require('path'); // וודא ש-path נטען נכון
+const fs = require.main.require('fs').promises; // וודא ש-fs נטען כ-promises
 
 const plugin = {};
 let customFieldsSettings = []; // נשמור כאן את השדות המוגדרים
 
 // --- פונקציית אתחול ---
 plugin.init = async (params) => {
-    const { router, middleware, app } = params; // הוסף app
+    const { router, middleware, app } = params; // וודא ש-router, middleware, app קיימים
     winston.info('[Custom-Profile-Fields-OK] Initializing...');
 
     // טעינת ההגדרות מהמסד נתונים
     await loadSettings();
 
     // הגדרת נתיב (route) לפאנל הניהול
+    // וודא שהנתיב תואם ל-plugin.json
     router.get('/admin/plugins/custom-profile-fields-ok', middleware.admin.checkPrivileges, renderAdmin);
     router.post('/api/admin/plugins/custom-profile-fields-ok/save', middleware.admin.checkPrivileges, saveAdmin);
 
@@ -35,6 +36,7 @@ async function loadSettings() {
 
 // --- פונקציות פאנל הניהול ---
 function renderAdmin(req, res) {
+    // וודא שה-res.render מצביע על הנתיב הנכון
     res.render('admin/plugins/custom-profile-fields-ok', {
         fields: customFieldsSettings,
         csrf_token: req.csrfToken(),
@@ -77,7 +79,6 @@ plugin.addFieldsToEdit = async (data) => {
     } else {
         data.customFields = [];
     }
-    // זה יאפשר לנו לכלול את התבנית custom_profile_fields בתוך תבניות אחרות
     return data;
 };
 
@@ -158,28 +159,34 @@ plugin.saveCustomFields = async (data) => {
     return data;
 };
 
-
 // --- הוספת תבנית לווים קיימים (Template Hooks) ---
 plugin.addTemplateToHook = async (payload) => {
     // payload מכיל את התוכן הקיים וכן את אובייקט ה-`data` מהתבנית
     // אנחנו מניחים שה-`data` כבר מכיל את `customFields` שנוצרו על ידי addFieldsToEdit/addFieldsToRegister
 
+    // וודא ש-app זמין כאן. הוא אמור לעבור ב-init
+    if (!app) {
+        winston.error('[Custom-Profile-Fields-OK] Global app object not available for addTemplateToHook!');
+        return payload;
+    }
+
     const tplPath = path.join(__dirname, 'templates', 'partials', 'custom_profile_fields.tpl');
 
     try {
-        const templateContent = await fs.promises.readFile(tplPath, 'utf8');
+        const templateContent = await fs.readFile(tplPath, 'utf8');
         // renderContent יבצע את ההחלפות בתבנית (כמו {{{ each customFields }}})
         const renderedHtml = await app.render(templateContent, payload.data); // השתמש ב-payload.data עבור הנתונים
 
         payload.content += renderedHtml; // הוסף את ה-HTML המרונדר לתוכן הקיים ב-hook
     } catch (err) {
         winston.error(`[Custom-Profile-Fields-OK] Error rendering template hook: ${err.message}`);
+        // Log the exact path for debugging
+        winston.error(`[Custom-Profile-Fields-OK] Template path tried: ${tplPath}`);
     }
     return payload;
 };
 
 // פונקציית parsePost שצוינה ב-plugin.json, רלוונטית רק אם נרצה לפרסר שדות מותאמים אישית בפוסטים
-// במקרה שלנו, ה-filter:user.custom_fields כבר מטפל בהצגה בפרופיל, אז זה לא הכרחי כרגע.
 plugin.parsePost = async (post) => {
     // זו פונקציה placeholder. כרגע לא נשתמש בה.
     return post;
