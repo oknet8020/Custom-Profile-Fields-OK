@@ -1,11 +1,10 @@
 'use strict';
-
 const User = require.main.require('./src/user');
 const Settings = require.main.require('./src/settings');
-const Meta = require.main.require('./src/meta'); // נצטרך את Meta כדי לשמור הגדרות
-const db = require.main.require('./src/database'); // גישה ישירה למסד הנתונים אם נצטרך
-const winston = require.main.require('winston'); // לרישום לוגים
-const nconf = require.main.require('nconf'); // לקריאת הגדרות NodeBB
+const Meta = require.main.require('./src/meta');
+const db = require.main.require('./src/database');
+const winston = require.main.require('winston');
+const nconf = require.main.require('nconf');
 const path = require('path');
 const fs = require('fs');
 
@@ -14,7 +13,7 @@ let customFieldsSettings = []; // נשמור כאן את השדות המוגדר
 
 // --- פונקציית אתחול ---
 plugin.init = async (params) => {
-    const { router, middleware } = params;
+    const { router, middleware, app } = params; // הוסף app
     winston.info('[Custom-Profile-Fields-OK] Initializing...');
 
     // טעינת ההגדרות מהמסד נתונים
@@ -78,15 +77,13 @@ plugin.addFieldsToEdit = async (data) => {
     } else {
         data.customFields = [];
     }
+    // זה יאפשר לנו לכלול את התבנית custom_profile_fields בתוך תבניות אחרות
     return data;
 };
 
 // --- הוספת שדות לפרופיל הציבורי ---
 plugin.addFieldsToProfile = async (data) => {
-    // נצטרך לממש את זה - לקרוא את הנתונים של המשתמש ולהציג אותם
-    // זה ידרוש שינוי בתבנית הפרופיל או שימוש ב-hook מתאים יותר
     winston.info(`[Custom-Profile-Fields-OK] addFieldsToProfile hook called for uid: ${data.uid}`);
-    // דוגמה (נצטרך לשפר):
     const userData = await User.getUserFields(data.uid, customFieldsSettings.map(f => `customField_${f.id}`));
     data.fields = customFieldsSettings
         .map(field => ({
@@ -98,5 +95,67 @@ plugin.addFieldsToProfile = async (data) => {
     return data;
 };
 
+// --- הוספת שדות לטופס הרישום (filter:register.build) ---
+plugin.addFieldsToRegister = async (data) => {
+    if (customFieldsSettings.length > 0) {
+        data.customFields = customFieldsSettings.map(field => ({
+            ...field,
+            value: '', // השדות ריקים בהרשמה חדשה
+        }));
+    } else {
+        data.customFields = [];
+    }
+    return data;
+};
+
+// --- שמירת שדות מותאמים אישית של משתמש לאחר רישום (filter:register.complete) ---
+plugin.saveRegistrationFields = async (data) => {
+    const { uid, userData } = data;
+    winston.info(`[Custom-Profile-Fields-OK] Attempting to save custom fields after registration for uid: ${uid}`);
+
+    const fieldsToSave = {};
+    for (const field of customFieldsSettings) {
+        const fieldKey = `customField_${field.id}`;
+        if (userData && userData[fieldKey] !== undefined) {
+            fieldsToSave[fieldKey] = userData[fieldKey];
+            winston.verbose(`[Custom-Profile-Fields-OK] Saving registration field ${fieldKey}: ${userData[fieldKey]}`);
+        }
+    }
+
+    if (Object.keys(fieldsToSave).length > 0) {
+        try {
+            await User.setUserFields(uid, fieldsToSave);
+            winston.info(`[Custom-Profile-Fields-OK] Successfully saved custom registration fields for uid: ${uid}`);
+        } catch (err) {
+            winston.error(`[Custom-Profile-Fields-OK] Error saving custom registration fields for uid ${uid}: ${err.message}`);
+        }
+    }
+    return data;
+};
+
+// --- שמירת שדות מותאמים אישית של משתמש (action:user.save) ---
+plugin.saveCustomFields = async (data) => {
+    const { uid, userData } = data;
+    winston.info(`[Custom-Profile-Fields-OK] Attempting to save custom fields for uid: ${uid}`);
+
+    const fieldsToSave = {};
+    for (const field of customFieldsSettings) {
+        const fieldKey = `customField_${field.id}`;
+        if (userData && userData[fieldKey] !== undefined) {
+            fieldsToSave[fieldKey] = userData[fieldKey];
+            winston.verbose(`[Custom-Profile-Fields-OK] Saving ${fieldKey}: ${userData[fieldKey]}`);
+        }
+    }
+
+    if (Object.keys(fieldsToSave).length > 0) {
+        try {
+            await User.setUserFields(uid, fieldsToSave);
+            winston.info(`[Custom-Profile-Fields-OK] Successfully saved custom fields for uid: ${uid}`);
+        } catch (err) {
+            winston.error(`[Custom-Profile-Fields-OK] Error saving custom fields for uid ${uid}: ${err.message}`);
+        }
+    }
+    return data;
+};
 
 module.exports = plugin;
