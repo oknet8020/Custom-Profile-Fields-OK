@@ -4,9 +4,16 @@
   "website_url": "כתובת אתר",
   "field_id": "מזהה שדה (באנגלית, ללא רווחים)",
   "field_label": "תווית שדה (יוצג למשתמש)",
-  "field_type": "סוג שדה (טקסט, מספר, טלפון, URL)",
+  "field_type": "סוג שדה",
   "placeholder": "טקסט מילוי אוטומטי",
   "add_field": "הוסף שדה",
   "save_settings": "שמור הגדרות",
-  "settings_saved_successfully": "הגדרות נשמרו בהצלחה!"
+  "settings_saved_successfully": "הגדרות נשמרו בהצלחה!",
+  "description": "כאן ניתן להגדיר שדות פרופיל מותאמים אישית עבור משתמשי הפורום.",
+  "type_text": "טקסט",
+  "type_number": "מספר",
+  "type_phone": "טלפון",
+  "type_url": "כתובת אתר",
+  "field_required": "שדה חובה?",
+  "remove_field": "הסר שדה"
 }
