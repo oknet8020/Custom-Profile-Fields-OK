@@ -1,124 +1,64 @@
-/* globals $, define, app, bootbox, socket */
+'use strict';
+/* globals define, app, socket, bootbox */
 
-define('admin/plugins/custom-profile-fields-ok', ['settings'], function (Settings) {
-    'use strict';
-
-    var ACP = {};
-    var fieldTemplate = '';
-    var fieldsData = [];
+define('admin/plugins/custom-profile-fields-ok', ['translator'], function (translator) {
+    const ACP = {};
+    let fields = [];
 
     ACP.init = function () {
-        fieldTemplate = $('#field-template').html();
-        loadSettingsAndRender();
+        console.log('[Custom-Profile-Fields-OK] Admin page initialized.');
 
-        $('#add-field-btn').on('click', addField);
-        $('#fields-container').on('click', '.remove-field-btn', removeField);
-        $('#custom-fields-form').on('submit', saveSettings);
+        // Load existing settings
+        socket.emit('admin.settings.get', { hash: 'custom-profile-fields-ok', cid: app.cid }, function (err, settings) {
+            if (err) {
+                return app.alertError(err.message);
+            }
+            if (settings && settings.fields) {
+                try {
+                    fields = JSON.parse(settings.fields);
+                    renderFields();
+                } catch (e) {
+                    console.error('[Custom-Profile-Fields-OK] Error parsing fields from settings:', e);
+                    app.alertError('Error loading settings: ' + e.message);
+                }
+            }
+        });
+
+        $('#add-field-btn').off('click').on('click', addField);
+        $('#save-settings-btn').off('click').on('click', saveSettings);
+        $('#fields-container').off('click', '.remove-field-btn').on('click', '.remove-field-btn', removeField);
+
+        // Initial render in case there are no saved fields yet
+        if (fields.length === 0) {
+            // Optionally add a default field if the array is empty
+            // addField();
+        }
     };
 
-    function loadSettingsAndRender() {
-        // We get the initial fields from the template data passed by library.js
-        fieldsData = Settings.load('custom-profile-fields-ok').fields || [];
+    function addField() {
+        const index = fields.length;
+        fields.push({
+            id: '',
+            label: '',
+            type: 'text', // Default type
+            placeholder: '',
+            required: false // New field for validation (default to false)
+        });
         renderFields();
     }
 
+    function removeField(e) {
+        const index = parseInt($(e.target).parents('.field-item').data('index'), 10);
+        if (!isNaN(index)) {
+            fields.splice(index, 1);
+            renderFields();
+        }
+    }
+
     function renderFields() {
-        var container = $('#fields-container');
+        const container = $('#fields-container');
         container.empty(); // Clear existing fields
 
-        fieldsData.forEach(function(field) {
-            var $fieldEl = $(fieldTemplate);
-            $fieldEl.find('.field-id').val(field.id);
-            $fieldEl.find('.field-label').val(field.label);
-            $fieldEl.find('.field-type').val(field.type);
-            $fieldEl.find('.field-placeholder').val(field.placeholder);
-            container.append($fieldEl);
-        });
-    }
-
-
-    function addField() {
-        var container = $('#fields-container');
-        var $fieldEl = $(fieldTemplate);
-        container.append($fieldEl);
-    }
-
-    function removeField() {
-        $(this).closest('.field-entry').remove();
-    }
-
-    function saveSettings(e) {
-        e.preventDefault(); // Prevent default form submission
-
-        var fields = [];
-        var isValid = true;
-        var usedIds = {};
-
-        $('#fields-container .field-entry').each(function () {
-            var $el = $(this);
-            var id = $el.find('.field-id').val().trim();
-            var label = $el.find('.field-label').val().trim();
-            var type = $el.find('.field-type').val();
-            var placeholder = $el.find('.field-placeholder').val().trim();
-
-            if (!id || !label) {
-                app.alertError('Field ID and Label are required for all fields.');
-                isValid = false;
-                return false; // Exit .each loop
-            }
-
-            if (!/^[a-zA-Z0-9_]+$/.test(id)) {
-                 app.alertError('Field ID can only contain letters, numbers, and underscores.');
-                 isValid = false;
-                 return false;
-            }
-
-            if (usedIds[id]) {
-                app.alertError('Field IDs must be unique. Found duplicate: ' + id);
-                isValid = false;
-                return false;
-            }
-
-            usedIds[id] = true;
-
-            fields.push({
-                id: id,
-                label: label,
-                type: type,
-                placeholder: placeholder || ''
-            });
-        });
-
-        if (!isValid) {
-            return;
-        }
-
-        // Use Socket.IO or AJAX to save data
-        socket.emit('admin.plugins.customProfileFieldsOK.save', {
-            _csrf: config.csrf_token, // Make sure config.csrf_token is available or send it differently
-            fields: JSON.stringify(fields)
-        }, function(err, result) {
-            if (err) {
-                return app.alertError('Error saving settings: ' + err.message);
-            }
-            app.alertSuccess('Settings saved successfully!');
-            fieldsData = fields; // Update local data
-        });
-
-        // Fallback or alternative: Use a POST request (requires handling in library.js)
-        $.post('/api/admin/plugins/custom-profile-fields-ok/save', {
-            _csrf: $('[name="_csrf"]').val(),
-            fields: JSON.stringify(fields)
-        })
-        .done(function() {
-            app.alertSuccess('Settings saved successfully!');
-            fieldsData = fields; // Update local data
-        })
-        .fail(function() {
-            app.alertError('Failed to save settings.');
-        });
-    }
-
-
-    return ACP;
-});
+        fields.forEach(function (field, index) {
+            const fieldHtml = `
+                <div class="card field-item mb-3" data-index="<span class="math-inline">\{index\}"\>
