@@ -1,0 +1,26 @@
+{
+  "name": "nodebb-plugin-custom-profile-fields-ok",
+  "version": "0.0.1",
+  "description": "Custom Profile Fields OK - A NodeBB plugin for custom user profile fields.",
+  "main": "library.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oknet8020/nodebb-plugin-Custom-Profile-Fields-OK.git"
+  },
+  "keywords": [
+    "nodebb",
+    "plugin",
+    "profile",
+    "fields",
+    "custom"
+  ],
+  "author": "Your Name Here",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/oknet8020/nodebb-plugin-Custom-Profile-Fields-OK/issues"
+  },
+  "homepage": "https://github.com/oknet8020/nodebb-plugin-Custom-Profile-Fields-OK#readme"
+}
