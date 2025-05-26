@@ -158,4 +158,31 @@ plugin.saveCustomFields = async (data) => {
     return data;
 };
 
+
+// --- הוספת תבנית לווים קיימים (Template Hooks) ---
+plugin.addTemplateToHook = async (payload) => {
+    // payload מכיל את התוכן הקיים וכן את אובייקט ה-`data` מהתבנית
+    // אנחנו מניחים שה-`data` כבר מכיל את `customFields` שנוצרו על ידי addFieldsToEdit/addFieldsToRegister
+
+    const tplPath = path.join(__dirname, 'templates', 'partials', 'custom_profile_fields.tpl');
+
+    try {
+        const templateContent = await fs.promises.readFile(tplPath, 'utf8');
+        // renderContent יבצע את ההחלפות בתבנית (כמו {{{ each customFields }}})
+        const renderedHtml = await app.render(templateContent, payload.data); // השתמש ב-payload.data עבור הנתונים
+
+        payload.content += renderedHtml; // הוסף את ה-HTML המרונדר לתוכן הקיים ב-hook
+    } catch (err) {
+        winston.error(`[Custom-Profile-Fields-OK] Error rendering template hook: ${err.message}`);
+    }
+    return payload;
+};
+
+// פונקציית parsePost שצוינה ב-plugin.json, רלוונטית רק אם נרצה לפרסר שדות מותאמים אישית בפוסטים
+// במקרה שלנו, ה-filter:user.custom_fields כבר מטפל בהצגה בפרופיל, אז זה לא הכרחי כרגע.
+plugin.parsePost = async (post) => {
+    // זו פונקציה placeholder. כרגע לא נשתמש בה.
+    return post;
+};
+
 module.exports = plugin;
