@@ -2,7 +2,7 @@
   "id": "nodebb-plugin-custom-profile-fields-ok",
   "name": "Custom Profile Fields OK",
   "description": "Allows administrators to add custom fields to user profiles and users to fill them.",
-  "url": "https://github.com/YOUR_USERNAME/Custom-Profile-Fields-OK", // שנה לכתובת ה-Git שלך
+  "url": "https://github.com/oknet8020/Custom-Profile-Fields-OK", // שנה לכתובת ה-Git שלך
   "library": "./library.js",
   "hooks": [
     { "hook": "static:app.load", "method": "init" },
