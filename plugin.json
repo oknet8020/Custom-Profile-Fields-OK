@@ -9,6 +9,9 @@
     { "hook": "filter:admin.header.build", "method": "addAdminNavigation" },
     { "hook": "filter:user.account.edit.build", "method": "addFieldsToEdit" },
     { "hook": "filter:user.custom_fields", "method": "addFieldsToProfile" } // וו חדש שנגדיר
+    { "hook": "filter:register.build", "method": "addFieldsToRegister" },     // <--- הוק חדש: הוספת שדות לטופס הרשמה
+    { "hook": "filter:register.complete", "method": "saveRegistrationFields" }, // <--- הוק חדש: שמירת נתונים מהרשמה
+    { "hook": "action:user.save", "method": "saveCustomFields" }               // <--- הוק קיים, וודא שגם הוא שם!
   ],
   "templates": "./templates",
   "acpScripts": [
