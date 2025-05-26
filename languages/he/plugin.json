@@ -1,5 +1,12 @@
 {
   "custom_fields": "שדות מותאמים אישית",
   "phone_number": "מספר טלפון",
-  "website_url": "כתובת אתר"
+  "website_url": "כתובת אתר",
+  "field_id": "מזהה שדה (באנגלית, ללא רווחים)",
+  "field_label": "תווית שדה (יוצג למשתמש)",
+  "field_type": "סוג שדה (טקסט, מספר, טלפון, URL)",
+  "placeholder": "טקסט מילוי אוטומטי",
+  "add_field": "הוסף שדה",
+  "save_settings": "שמור הגדרות",
+  "settings_saved_successfully": "הגדרות נשמרו בהצלחה!"
 }
