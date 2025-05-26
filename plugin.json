@@ -2,16 +2,18 @@
   "id": "nodebb-plugin-custom-profile-fields-ok",
   "name": "Custom Profile Fields OK",
   "description": "Allows administrators to add custom fields to user profiles and users to fill them.",
-  "url": "https://github.com/oknet8020/Custom-Profile-Fields-OK", // שנה לכתובת ה-Git שלך
+  "url": "https://github.com/oknet8020/Custom-Profile-Fields-OK",
   "library": "./library.js",
   "hooks": [
     { "hook": "static:app.load", "method": "init" },
     { "hook": "filter:admin.header.build", "method": "addAdminNavigation" },
     { "hook": "filter:user.account.edit.build", "method": "addFieldsToEdit" },
-    { "hook": "filter:user.custom_fields", "method": "addFieldsToProfile" } // וו חדש שנגדיר
-    { "hook": "filter:register.build", "method": "addFieldsToRegister" },     // <--- הוק חדש: הוספת שדות לטופס הרשמה
-    { "hook": "filter:register.complete", "method": "saveRegistrationFields" }, // <--- הוק חדש: שמירת נתונים מהרשמה
-    { "hook": "action:user.save", "method": "saveCustomFields" }               // <--- הוק קיים, וודא שגם הוא שם!
+    { "hook": "filter:user.custom_fields", "method": "addFieldsToProfile" },
+    { "hook": "filter:register.build", "method": "addFieldsToRegister" },
+    { "hook": "filter:register.complete", "method": "saveRegistrationFields" },
+    { "hook": "action:user.save", "method": "saveCustomFields" },
+    { "hook": "filter:template.account/edit.profile_info", "method": "addTemplateToHook" },
+    { "hook": "filter:template.register.bottom", "method": "addTemplateToHook" }
   ],
   "templates": "./templates",
   "acpScripts": [
